@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  shortlink:
+    image: php:8.2-apache
+    container_name: shortlink-app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: >
+      bash -c "
+        a2enmod rewrite deflate expires headers &&
+        apache2-foreground
+      "
+    restart: unless-stopped
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+
+  # Opcional: Java container para compilar engine
+  java-builder:
+    image: openjdk:17-slim
+    container_name: shortlink-java
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      bash -c "
+        javac ShortLinkEngine.java &&
+        jar cvfe ShortLinkEngine.jar ShortLinkEngine ShortLinkEngine.class &&
+        echo 'Java engine compilado com sucesso!'
+      "
+    profiles:
+      - build
